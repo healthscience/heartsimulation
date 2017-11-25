@@ -5,6 +5,31 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <title>Heart Share (alpha)</title>
+        <style>
+            #heart {
+                animation-duration: 1000ms;
+                animation-name: beat;
+                animation-direction: alternate;
+                animation-iteration-count: infinite;
+
+            }
+
+            @keyframes beat {
+                from {
+                    transform: scale(1);
+                }
+
+                to {
+                    transform: scale(1.2);
+                }
+            }
+
+            .heart {
+                display: flex;
+                justify-content: space-around;
+            }
+
+        </style>
     </head>
     <body>
         <h1>Heart Share</h1>
@@ -16,64 +41,60 @@
             <input type="number" id="bpm" v-model.number="bpm">
 
             <label for="amplitude">Amplitude</label>
-            <input type="number" id="amplitude" v-model.number="amplitude">
+            <input type="number" id="amplitude" v-model.number="amplitude" :change="changeRule('beat')">
 
-            <p>Last Draw: {{ lastBeat }}</p>
-            <p>Hertz: {{ getHertz }}</p>
-            <p>Draw rate: {{ drawRate }}</p>
-
-            <img src="assets/images/heart.png" alt="Heart">
-
+            <p>{{ milliseconds }}</p>
+            <div class="heart">
+                <img src="assets/images/heart.png" alt="Heart" id="heart" v-bind:style="{animationDuration: milliseconds/2 + 'ms'}">
+            </div>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.8/vue.js" integrity="sha256-14zEfMOpgDY6yDOn9QHrJThIrKbaLGmAWxSWOwgpVQM=" crossorigin="anonymous"></script>
-<<<<<<< Updated upstream
-        <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js" integrity="sha256-6fhm481uY9c152qGWIVgE7KbzaCj5WjCi3BGIpZef2E=" crossorigin="anonymous"></script>-->
-        <!--<script src="assets/js/heartCanvas.js"></script>-->
 
-=======
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js" integrity="sha256-6fhm481uY9c152qGWIVgE7KbzaCj5WjCi3BGIpZef2E=" crossorigin="anonymous"></script>
-        <script src="assets/js/heartCanvas.js"></script>
         <script src="assets/js/Genetic Alg/HeartTest.js"></script>
->>>>>>> Stashed changes
         <script>
             var heartApp = new Vue({
                 el: '#app',
                 data: {
                     volume: 0,
                     bpm: 60,
-                    amplitude: 0.25,
-                    increasing: true,
-                    lastBeat: 0,
-                    drawRate: 0,
+                    amplitude: 1.2,
                 },
                 computed: {
-                    getHertz: function () {
-                        return (this.bpm / 60);
+                    milliseconds: function () {
+                        return (60 / this.bpm) * 1000;
                     }
                 },
                 methods: {
-                    beat: function () {
-
-
-                    },
-                    render: function () {
-//                        group.rotation.y += ( targetRotation - group.rotation.y ) * 0.05;
-//                        group.scale.z = scale;
-//                        renderer.render(scene, camera);
-                        if (typeof heartApp !== "undefined") {
-                            this.beat();
+                    findKeyframesRule: function (rule) {
+                        // gather all stylesheets into an array
+                        var ss = document.styleSheets;
+                        // loop through the stylesheets
+                        for (var i = 0; i < ss.length; ++i) {
+                            // loop through all the rules
+                            for (var j = 0; j < ss[i].cssRules.length; ++j) {
+                                if (ss[i].cssRules[j].name === rule)
+                                    return ss[i].cssRules[j];
+                            }
                         }
+                        // rule not found
+                        return null;
                     },
-                    animate: function () {
-                        requestAnimationFrame(this.animate);
-                        this.render();
+                    changeRule: function (anim) {
+                        // find our -webkit-keyframe rule
+                        var keyframes = this.findKeyframesRule(anim);
+                        // remove the existing "to" rule
+                        keyframes.deleteRule("to");
+                        // create new "to" rule with the new amplitude
+                        keyframes.insertRule("to {transform: scale(" + this.amplitude + ");}");
+
+                        // assign the animation to our element (which will cause the animation to run)
+                        document.getElementById('heart').style.animationName = anim;
                     }
+
                 },
                 mounted: function () {
-                    this.lastBeat = Date.now() / 1000;
                 }
             });
-            heartApp.animate();
         </script>
 
     </body>
