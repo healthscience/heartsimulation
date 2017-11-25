@@ -14,7 +14,7 @@ var mouseXOnMouseDown = 0;
 
 var windowHalfX = window.innerWidth / 2;
 
-initHeart();
+// initHeart();
 
 function initHeart() {
 

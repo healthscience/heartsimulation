@@ -22,6 +22,8 @@
             <p>Hertz: {{ getHertz }}</p>
             <p>Draw rate: {{ drawRate }}</p>
 
+            <img src="assets/images/heart.png" alt="Heart">
+
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.8/vue.js" integrity="sha256-14zEfMOpgDY6yDOn9QHrJThIrKbaLGmAWxSWOwgpVQM=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js" integrity="sha256-6fhm481uY9c152qGWIVgE7KbzaCj5WjCi3BGIpZef2E=" crossorigin="anonymous"></script>
@@ -48,8 +50,8 @@
                 methods: {
                     beat: function () {
 
-                        var now = performance.now();
-                        // how long since the last draw (360ms for a 60hz screen)
+                        var now = parseInt(Date.now() / 1000);
+                        // how long since the last draw
                         this.drawRate = now - this.lastBeat;
                         this.lastBeat = now;
                         // how much do we need to scale up?
@@ -68,8 +70,8 @@
                         }
                     },
                     render: function () {
-                        group.rotation.y += ( targetRotation - group.rotation.y ) * 0.05;
-                        group.scale.z = scale;
+//                        group.rotation.y += ( targetRotation - group.rotation.y ) * 0.05;
+//                        group.scale.z = scale;
 //                        renderer.render(scene, camera);
                         if (typeof heartApp !== "undefined") {
                             this.beat();
@@ -81,7 +83,7 @@
                     }
                 },
                 mounted: function () {
-                    this.lastBeat = performance.now();
+                    this.lastBeat = Date.now() / 1000;
                 }
             });
             heartApp.animate();
@@ -89,5 +91,3 @@
 
     </body>
 </html>
-
-var increasing = true;
