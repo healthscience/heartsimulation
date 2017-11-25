@@ -49,13 +49,13 @@ function stopCriteria() {
   return (1000)
 }
 
-function fitness(solution) {
-  var targetflow = 0.28*1*.25; //0.07; //70ml/s
+function fitness(solution, target) {
+  var targetflow = target;
   var actualflow = solution.V*solution.F*solution.A;
   return(Math.abs(actualflow-targetflow))
 }
 
-function genetic_alg(input, pool, iterations){
+function genetic_alg(input, pool, iterations, target){
   //inputs are optional. 
   //input = {V:, F:, A:,Score: }
   //pool defaults to 1000
@@ -63,6 +63,9 @@ function genetic_alg(input, pool, iterations){
   var parents = [];
   var childs = [];
   var score = [];
+  if(!target){
+    target = 0.28*1*.25;
+  }
   if (!pool) {
     pool = 1000;
   };
@@ -72,12 +75,12 @@ function genetic_alg(input, pool, iterations){
   if(!input){
     for (i = 0; i < pool; i++) {
       parents.push(getRandomSolution());
-      parents[i].Score = fitness(parents[i]);
+      parents[i].Score = fitness(parents[i], target);
     } 
   } else {
     for (i = 0; i < pool; i++) {
       parents.push(mutate(input));
-      parents[i].Score = fitness(parents[i]);
+      parents[i].Score = fitness(parents[i], target);
     } 
   }
   for (n = 0; n <iterations; n++){
@@ -89,7 +92,7 @@ function genetic_alg(input, pool, iterations){
       childs[i] = {};
       childs[i] = crossover(parents[Math.round(Math.random()*(pool/4),1)], parents[Math.round(Math.random()*(pool/4),1)]); 
       childs[i] = mutate(childs[i]);
-      childs[i].Score = fitness(childs[i]);
+      childs[i].Score = fitness(childs[i], target);
     } 
     parents = childs;
   }
