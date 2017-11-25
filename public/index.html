@@ -33,8 +33,6 @@
             var heartApp = new Vue({
                 el: '#app',
                 data: {
-                    heart: heartShape,
-                    group: group,
                     volume: 0,
                     bpm: 60,
                     amplitude: 0.25,
@@ -50,24 +48,7 @@
                 methods: {
                     beat: function () {
 
-                        var now = parseInt(Date.now() / 1000);
-                        // how long since the last draw
-                        this.drawRate = now - this.lastBeat;
-                        this.lastBeat = now;
-                        // how much do we need to scale up?
 
-
-                        if (this.increasing) {
-                            scale = scale + 1;
-                            if (scale > 10) {
-                                this.increasing = false;
-                            }
-                        } else {
-                            scale--;
-                            if (scale < 2) {
-                                this.increasing = true;
-                            }
-                        }
                     },
                     render: function () {
 //                        group.rotation.y += ( targetRotation - group.rotation.y ) * 0.05;
