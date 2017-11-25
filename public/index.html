@@ -1,4 +1,5 @@
 <!doctype html>
+<!--suppress JSUnusedGlobalSymbols, JSUnresolvedFunction -->
 <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -34,30 +35,30 @@
     <body>
         <h1>Heart Share</h1>
         <div id="app">
-            <label>Volume</label>
+
+            <h3>Volume</h3>
             <p>{{ volume }}</p>
+            <h3>BPM</h3>
+            <p>{{ bpm }}</p>
+            <h3>Amplitude</h3>
+            <p>{{ amplitude}} </p>
 
-            <label for="bpm">BPM</label>
-            <input type="number" id="bpm" v-model.number="bpm">
-
-            <label for="amplitude">Amplitude</label>
-            <input type="number" id="amplitude" v-model.number="amplitude" :change="changeRule('beat')">
-
-            <p>{{ milliseconds }}</p>
             <div class="heart">
-                <img src="assets/images/heart.png" alt="Heart" id="heart" v-bind:style="{animationDuration: milliseconds/2 + 'ms'}">
+                <img src="assets/images/heart.png" alt="Heart" id="heart" :style="{animationDuration: milliseconds/2 + 'ms'}">
             </div>
+
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.8/vue.js" integrity="sha256-14zEfMOpgDY6yDOn9QHrJThIrKbaLGmAWxSWOwgpVQM=" crossorigin="anonymous"></script>
-
         <script src="assets/js/Genetic Alg/HeartTest.js"></script>
         <script>
-            var heartApp = new Vue({
+            let heartApp;
+            // noinspection JSUnresolvedFunction
+            heartApp = new Vue({
                 el: '#app',
                 data: {
                     volume: 0,
                     bpm: 60,
-                    amplitude: 1.2,
+                    amplitude: 1.2
                 },
                 computed: {
                     milliseconds: function () {
@@ -66,35 +67,31 @@
                 },
                 methods: {
                     findKeyframesRule: function (rule) {
-                        // gather all stylesheets into an array
-                        var ss = document.styleSheets;
-                        // loop through the stylesheets
-                        for (var i = 0; i < ss.length; ++i) {
-                            // loop through all the rules
-                            for (var j = 0; j < ss[i].cssRules.length; ++j) {
-                                if (ss[i].cssRules[j].name === rule)
+                        let ss = document.styleSheets;
+                        for (let i = 0; i < ss.length; ++i) {
+                            for (let j = 0; j < ss[i].cssRules.length; ++j) {
+                                if (ss[i].cssRules[j].type === window.CSSRule.KEYFRAMES_RULE && ss[i].cssRules[j].name === rule)
                                     return ss[i].cssRules[j];
                             }
                         }
-                        // rule not found
                         return null;
                     },
                     changeRule: function (anim) {
-                        // find our -webkit-keyframe rule
-                        var keyframes = this.findKeyframesRule(anim);
-                        // remove the existing "to" rule
-                        keyframes.deleteRule("to");
-                        // create new "to" rule with the new amplitude
-                        keyframes.insertRule("to {transform: scale(" + this.amplitude + ");}");
-
-                        // assign the animation to our element (which will cause the animation to run)
+                        let keyframes = this.findKeyframesRule(anim);
+                        keyframes.deleteRule("100%");
+                        keyframes.appendRule("100% {transform: scale(" + this.amplitude + ");}");
                         document.getElementById('heart').style.animationName = anim;
                     }
 
                 },
                 mounted: function () {
+                    let alg = genetic_alg();
+                    this.amplitude = 1 + alg.A;
+                    this.volume = alg.V;
+                    this.bpm = alg.F * 60;
                 }
             });
+
         </script>
 
     </body>
