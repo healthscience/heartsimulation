@@ -37,11 +37,11 @@
         <div id="app">
 
             <h3>Volume</h3>
-            <p>{{ volume }}</p>
+            <p>{{ (volume * 1000).toFixed(2) }} millilitres</p>
             <h3>BPM</h3>
-            <p>{{ bpm }}</p>
+            <p>{{ bpm.toFixed(2) }} beats per minute</p>
             <h3>Amplitude</h3>
-            <p>{{ amplitude}} </p>
+            <p>{{ (( amplitude -1) *100 ).toFixed(2) }} % </p>
 
             <div class="heart">
                 <img src="assets/images/heart.png" alt="Heart" id="heart" :style="{animationDuration: milliseconds/2 + 'ms'}">
