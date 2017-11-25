@@ -75,7 +75,9 @@ function genetic_alg(){
       childs[i] = {};
       childs[i] = crossover(parents[Math.round(Math.random()*(pool/2),1)], parents[Math.round(Math.random()*(pool/2),1)]); 
       childs[i] = mutate(childs[i]);
+      childs[i].Score = fitness(childs[i]);
     } 
+    parents = childs;
   }
   //find best score
   parents.sort(function(a,b){
