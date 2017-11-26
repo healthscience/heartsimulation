@@ -7,12 +7,23 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <title>Heart Share (alpha)</title>
         <style>
+
+            body {
+                font-family: "Fira Code", monospace;
+            }
+
             #heart {
                 animation-duration: 1000ms;
                 animation-name: beat;
                 animation-direction: alternate;
                 animation-iteration-count: infinite;
+            }
 
+            #predicted {
+                animation-duration: 1000ms;
+                animation-name: beatPredicted;
+                animation-direction: alternate;
+                animation-iteration-count: infinite;
             }
 
             @keyframes beat {
@@ -25,9 +36,35 @@
                 }
             }
 
-            .heart {
+            @keyframes beatPredicted {
+                from {
+                    transform: scale(1);
+                }
+
+                to {
+                    transform: scale(1.2);
+                }
+            }
+
+            .hearts,
+            .message-wrapper,
+            .wrapper {
                 display: flex;
                 justify-content: space-around;
+            }
+
+            .wrapper-column {
+                flex-direction: column;
+            }
+
+            .message {
+                border: 1px solid green;
+                background: #b1dda5;
+                position: fixed;
+                top: 0;
+                color: white;
+                font-weight: 700;
+                padding: 0.5rem 1rem;
             }
 
         </style>
@@ -35,19 +72,56 @@
     <body>
         <h1>Heart Share</h1>
         <div id="app">
+            <div class="message-wrapper">
+                <div class="message" v-show="message !== ''">
+                    <p>{{ message }}</p>
+                </div>
+            </div>
 
-            <h3>Volume</h3>
-            <p>{{ (volume * 1000).toFixed(2) }} millilitres</p>
-            <h3>BPM</h3>
-            <p>{{ bpm.toFixed(2) }} beats per minute</p>
-            <h3>Amplitude</h3>
-            <p>{{ (( amplitude -1) *100 ).toFixed(2) }} % </p>
+            <div class="wrapper">
+                <div class="heart">
+                    <h3>Volume</h3>
+                    <p>{{ (heart.volume * 1000).toFixed(2) }} millilitres</p>
+                    <h3>BPM</h3>
+                    <p>{{ heart.bpm.toFixed(2) }} beats per minute</p>
+                    <h3>Amplitude</h3>
+                    <p>{{ (( heart.amplitude -1) *100 ).toFixed(2) }} % </p>
 
-            <div class="heart">
-                <img src="assets/images/heart.png" alt="Heart" id="heart" :style="{animationDuration: milliseconds/2 + 'ms'}">
+                </div>
+                <div class="predicted">
+                    <h3>Volume</h3>
+                    <p>{{ (predicted.volume * 1000).toFixed(2) }} millilitres</p>
+                    <h3>BPM</h3>
+                    <p>{{ predicted.bpm.toFixed(2) }} beats per minute</p>
+                    <h3>Amplitude</h3>
+                    <p>{{ (( predicted.amplitude -1) *100 ).toFixed(2) }} % </p>
+
+                </div>
+            </div>
+
+            <div class="wrapper wrapper-column">
+                <canvas id="heartChart" height="500"></canvas>
+                <canvas id="predictedChart" height="500" width="100%"></canvas>
+            </div>
+
+            <h3>Token</h3>
+            <p>In order to use the API you need to provide your API token, please enter it here</p>
+            <input type="password" v-model="token">
+            <hr>
+            <button @click="getHeartData">Get Heart Data</button>
+            <br>
+            <button @click="getHeart24Data">Get 24 Hour Average Heart Data</button>
+            <br>
+            <button @click="getAccelerometerData">Get Accelerometer Data</button>
+
+            <div class="hearts">
+                <img src="assets/images/heart.png" alt="Heart" id="heart" :style="{animationDuration: milliseconds(heart.bpm)/2 + 'ms'}">
+                <img src="assets/images/heart.png" alt="Heart" id="predicted" :style="{animationDuration: milliseconds(predicted.bpm)/2 + 'ms'}">
             </div>
 
         </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js" integrity="sha256-c0m8xzX5oOBawsnLVpHnU2ieISOvxi584aNElFl2W6M=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.17.1/axios.min.js" integrity="sha256-A83FHt22LbSOPYN9dGs74h/J0jqc3TZapHUplf2uupI=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.8/vue.js" integrity="sha256-14zEfMOpgDY6yDOn9QHrJThIrKbaLGmAWxSWOwgpVQM=" crossorigin="anonymous"></script>
         <script src="assets/js/Genetic Alg/HeartTest.js"></script>
         <script>
@@ -56,16 +130,35 @@
             heartApp = new Vue({
                 el: '#app',
                 data: {
-                    volume: 0,
-                    bpm: 60,
-                    amplitude: 1.2
+                    heart: {
+                        volume: 0,
+                        bpm: 60,
+                        amplitude: 1.2,
+                        chartCtx: 'heartChart',
+                        chart: {},
+                    },
+                    predicted: {
+                        volume: 0,
+                        bpm: 60,
+                        amplitude: 1.2,
+                        chartCtx: 'predictedChart',
+                        chart: {},
+                    },
+                    apiUrl: 'http://188.166.138.93:8882/',
+                    token: '',
+
+                    heartData: [],
+                    heart24Data: [],
+                    accelerometerData: [],
+
+                    message: '',
+
                 },
-                computed: {
-                    milliseconds: function () {
-                        return (60 / this.bpm) * 1000;
-                    }
-                },
+                computed: {},
                 methods: {
+                    milliseconds: function (bpm) {
+                        return (60 / bpm) * 1000;
+                    },
                     findKeyframesRule: function (rule) {
                         let ss = document.styleSheets;
                         for (let i = 0; i < ss.length; ++i) {
@@ -81,15 +174,132 @@
                         keyframes.deleteRule("100%");
                         keyframes.appendRule("100% {transform: scale(" + this.amplitude + ");}");
                         document.getElementById('heart').style.animationName = anim;
-                    }
+                    },
 
+                    checkToken: function () {
+                        if (this.token === '') {
+                            alert("You've not entered your token");
+                            return false;
+                        }
+                        return true;
+                    },
+                    getHeartData: function () {
+                        if (this.checkToken()) {
+                            let endpoint = this.apiUrl + "heartdata/" + this.token + '/james';
+                            let self = this;
+                            axios.get(endpoint)
+                                .then(function (response) {
+                                    self.heartData = response.data;
+                                    self.message = "Heart Data Loaded";
+
+                                    let chartData = {
+                                        labels: [],
+                                        datasets: [{
+                                            label: self.heartData[0].author.replace(self.heartData[0].author[0], self.heartData[0].author[0].toUpperCase()) + " Heart Rates",
+                                            backgroundColor: 'rgb(125, 100, 132)',
+                                            borderColor: 'rgb(125, 100, 132)',
+                                            data: []
+                                        }]
+                                    };
+                                    if (Object.keys(self.heart.chart).length === 0 && self.heart.chart.constructor === Object) {
+                                        self.heart.chart = self.drawChart(self.heart.chartCtx, chartData);
+                                    }
+
+                                    chartData.labels = response.data.map(function (row) {
+                                        return row.timestamp;
+                                    });
+                                    chartData.datasets[0].data = response.data.map(function (row) {
+                                        return row.hr;
+                                    });
+                                    self.updateChart(self.heart.chart, chartData.labels, chartData.datasets[0]);
+
+                                })
+                                .catch(function (error) {
+                                    alert(error);
+                                });
+                        }
+                    },
+                    getHeart24Data: function () {
+                        if (this.checkToken()) {
+                            let endpoint = this.apiUrl + "heart24data/" + this.token + '/james';
+                            let self = this;
+                            axios.get(endpoint)
+                                .then(function (response) {
+                                    self.heart24Data = response.data;
+                                    self.message = "24 Hour Average Heart Data Loaded";
+                                    let chartData = {
+                                        labels: [],
+                                        datasets: [{
+                                            label: self.heart24Data[0].author.replace(self.heart24Data[0].author[0], self.heart24Data[0].author[0].toUpperCase()) + " Average Heart Rates",
+                                            backgroundColor: 'rgb(255, 20, 132)',
+                                            borderColor: 'rgb(255, 20, 132)',
+                                            data: []
+                                        }]
+                                    };
+                                    if (Object.keys(self.heart.chart).length === 0 && self.heart.chart.constructor === Object) {
+                                        self.heart.chart = self.drawChart(self.heart.chartCtx, chartData);
+                                    }
+
+                                    chartData.labels = response.data.map(function (row) {
+                                        return row.daystart;
+                                    });
+                                    chartData.datasets[0].data = response.data.map(function (row) {
+                                        return row.hravg;
+                                    });
+                                    self.updateChart(self.heart.chart, chartData.labels, chartData.datasets[0]);
+
+                                })
+                                .catch(function (error) {
+                                    alert(error);
+                                });
+                        }
+                    },
+                    getAccelerometerData: function () {
+                        if (this.checkToken()) {
+                            let endpoint = this.apiUrl + "rawamiigoacc/" + this.token + '/james';
+                            let self = this;
+                            axios.get(endpoint)
+                                .then(function (response) {
+                                    self.accelerometerData = response.data;
+                                    self.message = "Accelerometer Data Loaded";
+                                })
+                                .catch(function (error) {
+                                    alert(error);
+                                });
+                        }
+                    },
+
+                    drawChart: function (context, data) {
+                        return new Chart(context, {
+                            type: 'line',
+                            data: data,
+                            options: {
+                                responsive: true
+                            }
+                        });
+                    },
+                    updateChart: function (chart, label, data) {
+                        chart.data.labels.push(label);
+                        chart.data.datasets.forEach((dataset) => {
+                            dataset.data.push(data);
+                        });
+                        chart.update();
+                    }
                 },
                 mounted: function () {
                     let alg = genetic_alg();
-                    this.amplitude = 1 + alg.A;
-                    this.volume = alg.V;
-                    this.bpm = alg.F * 60;
+                    let alg2 = genetic_alg();
+
+                    this.heart.amplitude = 1 + alg.A;
+                    this.heart.volume = alg.V;
+                    this.heart.bpm = alg.F * 60;
+                    this.predicted.amplitude = 1 + alg2.A;
+                    this.predicted.volume = alg2.V;
+                    this.predicted.bpm = alg2.F * 60;
+
+
                 }
+
             });
 
         </script>
