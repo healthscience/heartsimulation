@@ -1,6 +1,7 @@
-var util = require('util');
-var events = require("events");
-var fs = require('fs');
+const util = require('util');
+const events = require("events");
+const fs = require('fs');
+const Heart = require('./real-heart-data.js');
 const inputWork = require('./prepare-input-work.js');
 const heartShare = require('./sim-heart.js');
 
@@ -9,6 +10,7 @@ var x = 0.2;
 var y = 0.2;
 var z = 0.2;
 
+var liveHeart = new Heart();
 var liveINwork = new inputWork();
 var liveSimHeart = new heartShare();
 console.log(liveSimHeart);
