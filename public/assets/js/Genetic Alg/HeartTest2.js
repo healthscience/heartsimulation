@@ -4,18 +4,18 @@
 
 var Genetics = {
   $: {
-    GenerateFakeData: function (Number_of_samples) {
+    GenerateFakeData: function (NumberOfSamples) {
       var FakeData = []
       var XYZ = []
-      var BPM_rest = 62
-      var BPM_max = 190
+      var BpmRest = 62
+      var BpmMax = 190
       var Time = 0
-      for (var i = 0; i < Number_of_samples; i++) {
+      for (var i = 0; i < NumberOfSamples; i++) {
         XYZ = [-100 + Math.random() * 200, -100 + Math.random() * 200, -100 + Math.random() * 200]
         FakeData.push({
           id: 'TestSubject01',
           xyz: XYZ,
-          bpm: (BPM_rest + ((Math.abs(XYZ[0]) + Math.abs(XYZ[1]) + Math.abs(XYZ[2])) / 3) / 100 * (BPM_max - BPM_rest)),
+          bpm: (BpmRest + ((Math.abs(XYZ[0]) + Math.abs(XYZ[1]) + Math.abs(XYZ[2])) / 3) / 100 * (BpmMax - BpmRest)),
           t: Time
         })
         Time += 100
@@ -53,20 +53,20 @@ var Genetics = {
       }
       return Model
     },
-    test: function (Model, input_data) {
-      var output_data = []
-      for (var i = 0; i < Object.keys(input_data).length; i++) {
-        output_data[i] = []
-        output_data[i].xyz = input_data[i].xyz
-        output_data[i].bpm = Model[0] + (Math.abs(input_data[i].xyz[0]) + Math.abs(input_data[i].xyz[1]) + Math.abs(input_data[i].xyz[2]))/Model[1]/Model[2]*(Model[3]-Model[4]) 
+    test: function (Model, InputData) {
+      var OutputData = []
+      for (var i = 0; i < Object.keys(InputData).length; i++) {
+        OutputData[i] = []
+        OutputData[i].xyz = InputData[i].xyz
+        OutputData[i].bpm = Model[0] + (Math.abs(InputData[i].xyz[0]) + Math.abs(InputData[i].xyz[1]) + Math.abs(InputData[i].xyz[2])) / Model[1] / Model[2] * (Model[3] - Model[4])
       }
-      return output_data
+      return OutputData
     },
-    fitness: function (Model, training_data) {
-      var test_results = Genetics.$.test(Model, training_data)
+    fitness: function (Model, TrainingData) {
+      var TestResults = Genetics.$.test(Model, TrainingData)
       var score = 0
-      for (var i = 0; i < training_data.length; i++) {
-        score += Math.pow(training_data[i].bpm - test_results[i].bpm, 2)
+      for (var i = 0; i < TrainingData.length; i++) {
+        score += Math.pow(TrainingData[i].bpm - TestResults[i].bpm, 2)
       };
       if (Object.is(score, NaN)) {
         score = 999999
@@ -74,14 +74,15 @@ var Genetics = {
       return (score)
     }
   },
-  Train: function (Input_Model, pool, iterations, training_data) {
+  Train: function (InputModel, pool, iterations, TrainingData) {
     // inputs are optional.
     // input = {V:, F:, A:,Score: }
     // pool defaults to 1000
     // iterations defaults to 10
     var parents = []
-    if (!training_data) {
-      training_data = Genetics.$.GenerateFakeData(500)
+    var i = 0
+    if (!TrainingData) {
+      TrainingData = Genetics.$.GenerateFakeData(500)
     }
     if (!pool) {
       pool = 20
@@ -89,27 +90,27 @@ var Genetics = {
     if (!iterations) {
       iterations = 2
     };
-    if (!Input_Model) {
-      for (var i = 0; i < pool; i++) {
+    if (!InputModel) {
+      for (i = 0; i < pool; i++) {
         parents.push({
           Model: Genetics.$.getRandomModel()
         })
       }
     } else {
-      parents.push(Input_Model)
-      for (var i = 0; i < (pool / 2); i++) {
+      parents.push(InputModel)
+      for (i = 0; i < (pool / 2); i++) {
         parents.push({
-          Model: Genetics.$.mutate(Input_Model.Model)
+          Model: Genetics.$.mutate(InputModel.Model)
         })
       }
-      for (var i = (pool / 2); i < pool; i++) {
+      for (i = (pool / 2); i < pool; i++) {
         parents.push({
           Model: Genetics.$.getRandomModel()
         })
       }
     }
-    for (var i = 1; i < pool; i++) {
-      parents[i].Score = (Genetics.$.fitness(parents[i].Model, training_data))
+    for (i = 1; i < pool; i++) {
+      parents[i].Score = (Genetics.$.fitness(parents[i].Model, TrainingData))
     }
     for (var n = 0; n < iterations; n++) {
       // sort on best score
@@ -117,7 +118,7 @@ var Genetics = {
         return (a.Score - b.Score)
       })
       var childs = []
-      for (var i = 0; i < pool; i++) {
+      for (i = 0; i < pool; i++) {
         var tempmodel = []
         switch (Math.round(Math.random())) {
           case 0:
@@ -129,23 +130,23 @@ var Genetics = {
         }
         childs.push({
           Model: tempmodel,
-          Score: (Genetics.$.fitness(tempmodel, training_data))
+          Score: (Genetics.$.fitness(tempmodel, TrainingData))
         })
       }
       parents = []
       parents = childs
     }
-    //find best score
+    // find best score
     parents.sort(function (a, b) {
       return a.Score - b.Score
     })
     // for (var i = 0; i < parents.length; i++){
     //   console.log (parents[i].Score);
     // }
-    var Best_Model = parents[0]
-    return Best_Model
+    var BestModel = parents[0]
+    return BestModel
   },
-  Query: function (Model, input_data) {
-    return Genetics.$.test(Model.Model, input_data)
+  Query: function (Model, InputData) {
+    return Genetics.$.test(Model.Model, InputData)
   }
 }
