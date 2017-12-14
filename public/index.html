@@ -113,6 +113,8 @@
             <button @click="getHeart24Data">Get 24 Hour Average Heart Data</button>
             <br>
             <button @click="getAccelerometerData">Get Accelerometer Data</button>
+            <br>
+            <button @click="getFakeData(100)">Get Fake Data</button>
 
             <div class="hearts">
                 <img src="assets/images/heart.png" alt="Heart" id="heart" :style="{animationDuration: milliseconds(heart.bpm)/2 + 'ms'}">
@@ -269,7 +271,53 @@
                                 });
                         }
                     },
+                    getFakeData: function(NunberOfSamples){
+                        timebase = new Date() - (24*60*60*1000*1) //yesterday
+                        heartData = []
+                        xData = []
+                        yData = []
+                        zData = []
+                        temperatureData = []
+                        // these are intentionally slightly unordered list.
+                        // the lists are not the same length nor syncronised in time.
+                        // data is crap, such is life.
+                        // At present there is no connection between varaibles. With the exception of the js Math.random() function.
+                        for (i=0; i<NunberOfSamples; i++){
+                            if (Math.random()>0.2) {
+                                xData.push ({
+                                    timestamp: Math.round(timebase + 4321 + (i * 500 + Math.random()*4500)),
+                                    x: 40 + Math.random()*10
+                                })
+                            }
+                            if (Math.random()>0.2) {
+                                yData.push ({
+                                    timestamp: Math.round(timebase + 3456 + (i * 500 + Math.random()*4500)),
+                                    y: -7 - Math.random()*10
+                                })
+                            }
+                            if (Math.random()>0.2) {
+                                zData.push ({
+                                    timestamp: Math.round(timebase + 1232 + (i * 500 + Math.random()*4500)),
+                                    z: 40 + Math.random()*10
+                                })
+                            }
+                            if (Math.random()>0.2) {
+                                temperatureData.push ({
+                                    timestamp: Math.round(timebase + 1234 + (i * 500 + Math.random()*4500)),
+                                    temperature: 34 + Math.random()*5
+                                })
+                            }
+                            if (Math.random()>0.2) {
+                                heartData.push ({
+                                    timestamp: Math.round(timebase + (i * 500 + Math.random()*4500)),
+                                    bpm: 65 + Math.random() * 50
+                                })
+                            }
 
+                        }
+                        // Multiple arrays now ready for passing to a training algo
+                        
+                    },
                     drawChart: function (context, data) {
                         return new Chart(context, {
                             type: 'line',
